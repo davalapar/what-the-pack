@@ -1,6 +1,8 @@
+
 /* eslint-disable no-console */
 
 const pb = require('pretty-bytes');
+const Buffer = require('buffer').Buffer;
 
 class Allocator {
   constructor (length) {
@@ -258,7 +260,7 @@ class MessagePack {
           }
           value = temp;
         }
-        if (value instanceof Buffer) { // typedarrays and buffer
+        if (value instanceof Buffer === true) { // typedarrays and buffer
           length = value.length;
           if (length < 256) { // bin8
             allocator.buffer[allocator.offset += 1] = 196;

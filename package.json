@@ -1,7 +1,7 @@
 {
   "name": "what-the-pack",
   "version": "1.0.0",
-  "description": "The fastest MessagePack implementation in Javascript",
+  "description": "The fastest MessagePack implementation in JS",
   "main": "index.js",
   "repository": "git@github.com:davalapar/what-the-pack.git",
   "author": "davalapar <davalapar@gmail.com>",
@@ -19,5 +19,8 @@
   "scripts": {
     "test": "jest",
     "benchmark": "node benchmark.js"
+  },
+  "browser": {
+    "./index.js": "./browser.js"
   }
 }
