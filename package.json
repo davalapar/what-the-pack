@@ -1,0 +1,23 @@
+{
+  "name": "what-the-pack",
+  "version": "1.0.0",
+  "description": "The fastest MessagePack implementation in Javascript",
+  "main": "index.js",
+  "repository": "git@github.com:davalapar/what-the-pack.git",
+  "author": "davalapar <davalapar@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "buffer": "^5.2.1",
+    "pretty-bytes": "^5.1.0"
+  },
+  "devDependencies": {
+    "benchmark": "^2.1.4",
+    "jest": "^23.6.0",
+    "microtime": "^2.1.8",
+    "notepack.io": "^2.1.3"
+  },
+  "scripts": {
+    "test": "jest",
+    "benchmark": "node benchmark.js"
+  }
+}
