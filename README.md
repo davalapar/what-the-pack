@@ -45,6 +45,10 @@ The fastest MessagePack implementation in JS.
 
 ## usage
 
+```
+yarn add what-the-pack
+```
+
 ```js
 const MessagePack = require('what-the-pack');
 
