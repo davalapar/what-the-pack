@@ -126,7 +126,6 @@ const data = {
 <!-- latest umd build -->
 <script src="https://unpkg.com/what-the-pack/dist/MessagePack.min.js"></script>
 
-
 <!-- exposed as 'MessagePack' -->
 <script>
   const data = {
@@ -146,7 +145,9 @@ const data = {
 
 ## benchmarks
 
-* `yarn run benchmark`
+```
+yarn run benchmark
+```
 
 ```
 $ yarn run benchmark
@@ -173,7 +174,9 @@ Done in 96.26s.
 ```
 ## tests
 
-* `yarn run test`
+```
+yarn run test
+```
 
 ```
 $ yarn run test
