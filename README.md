@@ -120,6 +120,30 @@ const data = {
 2^30 = 1.07 GB
 ```
 
+## minified build for browsers
+
+```
+<!-- latest umd build -->
+<script src="https://unpkg.com/what-the-pack/dist/MessagePack.min.js"></script>
+
+
+<!-- exposed as 'MessagePack' -->
+<script>
+  const data = {
+    name: 'Lunox',
+    age: 20
+  };
+
+  const encoded = MessagePack.encode(data);
+  const decoded = MessagePack.decode(encoded);
+
+  console.log({
+    encoded,
+    decoded
+  });
+</script>
+```
+
 ## benchmarks
 
 * `yarn run benchmark`
