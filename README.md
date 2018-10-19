@@ -120,6 +120,37 @@ const data = {
 2^30 = 1.07 GB
 ```
 
+## using dictionaries (added in 1.1.3)
+
+* this feature isn't in MessagePack spec but added as a convenience feature in 1.1.3
+* dictionaries allow us to decrease our buffer output size by recognizing strings used as object keys and replacing them with shorter-byte integer values during the encoding process
+* these shorter-byte placeholder values are then restored to their respective strings during the decoding process
+* the trade-off in using dictionaries is an insignificantly slower encoding and decoding time in exchange of a significantly smaller buffer output, which results into a lower network bandwidth and storage consumption in the long run
+* the best part: the byte placeholders starts from -32 then increments upwards, values -32 to 127 are encoded in single byte, which means your first (32 + 128) = 160 keys will be encoded as a single byte instead of encoding the whole string
+
+```js
+let encoded, decoded, data;
+data = { name: 'Lunox', age: 20 };
+
+encoded = MessagePack.encode(data);
+decoded = MessagePack.decode(encoded);
+console.log({ encoded, decoded });
+/**
+ * encoded: <Buffer 82 a4 6e 61 6d 65 a5 4c 75 6e 6f 78 a3 61 67 65 14> (17)
+ * decoded: { name: 'Lunox', age: 20 }
+ **/
+
+MessagePack.register('name', 'age');
+encoded = MessagePack.encode(data);
+decoded = MessagePack.decode(encoded);
+console.log({ encoded, decoded, dictionary: MessagePack.dictionary });
+/**
+ * encoded: <Buffer 82 e0 a5 4c 75 6e 6f 78 e1 14> (10)
+ * decoded: { name: 'Lunox', age: 20 }
+ * dictionary: { '-32': 'name', name: -32, '-31': 'age', age: -31 }
+ **/
+```
+
 ## minified build for browsers
 
 ```

@@ -87,30 +87,6 @@ const encoded = {
 };
 
 suite
-  .add('notepack.encode tiny', () => {
-    notepack.encode(tiny);
-  })
-  .add('notepack encode small', () => {
-    notepack.encode(small);
-  })
-  .add('notepack encode medium', () => {
-    notepack.encode(medium);
-  })
-  .add('notepack encode large', () => {
-    notepack.encode(large);
-  })
-  .add('notepack decode tiny', () => {
-    notepack.decode(encoded.notepack.tiny);
-  })
-  .add('notepack decode small', () => {
-    notepack.decode(encoded.notepack.small);
-  })
-  .add('notepack decode medium', () => {
-    notepack.decode(encoded.notepack.medium);
-  })
-  .add('notepack decode large', () => {
-    notepack.decode(encoded.notepack.large);
-  })
   .add('what-the-pack encode tiny', () => {
     wtp.encode(tiny);
   })
@@ -134,6 +110,30 @@ suite
   })
   .add('what-the-pack decode large', () => {
     wtp.decode(encoded.wtp.large);
+  })
+  .add('notepack.encode tiny', () => {
+    notepack.encode(tiny);
+  })
+  .add('notepack encode small', () => {
+    notepack.encode(small);
+  })
+  .add('notepack encode medium', () => {
+    notepack.encode(medium);
+  })
+  .add('notepack encode large', () => {
+    notepack.encode(large);
+  })
+  .add('notepack decode tiny', () => {
+    notepack.decode(encoded.notepack.tiny);
+  })
+  .add('notepack decode small', () => {
+    notepack.decode(encoded.notepack.small);
+  })
+  .add('notepack decode medium', () => {
+    notepack.decode(encoded.notepack.medium);
+  })
+  .add('notepack decode large', () => {
+    notepack.decode(encoded.notepack.large);
   })
   .on('cycle', (event) => {
     console.log(String(event.target));

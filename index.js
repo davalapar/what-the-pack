@@ -22,9 +22,28 @@ class Iterator {
 }
 
 let allocator = new Allocator();
-let iterator = new Iterator();
-
+const iterator = new Iterator();
+const dictionary = {};
+let dictionaryEnabled = false;
+let dictionaryOffset = -33;
+/**
+ * Why -33:
+ * - This allows us to use the negative (-32 to -1) and positive fixint range (0 to 127)
+ * - So instead of encoding the whole key string, we only encode a single byte
+ * - That's (32 + 128) = 160 of your first entries being encoded in a single damn byte
+ */
 class MessagePack {
+  static register (...args) {
+    dictionaryEnabled = true;
+    args.forEach((item) => {
+      dictionaryOffset += 1;
+      dictionary[dictionaryOffset] = item;
+      dictionary[item] = dictionaryOffset;
+    });
+  }
+  static get dictionary () {
+    return dictionary;
+  }
   static reallocate (length) {
     MessagePack.log('MessagePack: Setting buffer limit to', pb(length || Buffer.poolSize));
     allocator = new Allocator(length);
@@ -307,9 +326,16 @@ class MessagePack {
           } else {
             throw new Error('Object too large');
           }
-          for (let i = 0; i < length; i += 1) {
-            MessagePack.encode(keys[i], true);
-            MessagePack.encode(value[keys[i]], true);
+          if (dictionaryEnabled === true) {
+            for (let i = 0; i < length; i += 1) {
+              MessagePack.encode(dictionary[keys[i]] || keys[i], true);
+              MessagePack.encode(value[keys[i]], true);
+            }
+          } else {
+            for (let i = 0; i < length; i += 1) {
+              MessagePack.encode(keys[i], true);
+              MessagePack.encode(value[keys[i]], true);
+            }
           }
         }
         break;
@@ -340,7 +366,7 @@ class MessagePack {
     if (persist !== true) { // reset our iterator
       iterator.buffer = buffer;
       iterator.offset = 0;
-    };
+    }
     if (iterator.buffer[iterator.offset] < 192) {
       if (iterator.buffer[iterator.offset] < 128) { // positive fixint
         value = iterator.buffer[iterator.offset];
@@ -350,8 +376,15 @@ class MessagePack {
         length = iterator.buffer[iterator.offset] & 31;
         value = {};
         iterator.offset += 1;
-        for (let i = 0; i < length; i++) {
-          value[MessagePack.decode(undefined, true)] = MessagePack.decode(undefined, true);
+        if (dictionaryEnabled === true) {
+          for (let i = 0, key; i < length; i++) {
+            key = MessagePack.decode(undefined, true);
+            value[dictionary[key] || key] = MessagePack.decode(undefined, true);
+          }
+        } else {
+          for (let i = 0; i < length; i++) {
+            value[MessagePack.decode(undefined, true)] = MessagePack.decode(undefined, true);
+          }
         }
         return value;
       } else if (iterator.buffer[iterator.offset] < 160) { // fixarray
@@ -491,16 +524,30 @@ class MessagePack {
           length = iterator.buffer.readUInt16BE(iterator.offset += 1);
           value = {};
           iterator.offset += 2;
-          for (let i = 0; i < length; i++) {
-            value[MessagePack.decode(undefined, true)] = MessagePack.decode(undefined, true);
+          if (dictionaryEnabled === true) {
+            for (let i = 0, key; i < length; i++) {
+              key = MessagePack.decode(undefined, true);
+              value[dictionary[key] || key] = MessagePack.decode(undefined, true);
+            }
+          } else {
+            for (let i = 0; i < length; i++) {
+              value[MessagePack.decode(undefined, true)] = MessagePack.decode(undefined, true);
+            }
           }
           return value;
         case 223: // map32
           length = iterator.buffer.readUInt32BE(iterator.offset += 1);
           value = {};
           iterator.offset += 4;
-          for (let i = 0; i < length; i++) {
-            value[MessagePack.decode(undefined, true)] = MessagePack.decode(undefined, true);
+          if (dictionaryEnabled === true) {
+            for (let i = 0, key; i < length; i++) {
+              key = MessagePack.decode(undefined, true);
+              value[dictionary[key] || key] = MessagePack.decode(undefined, true);
+            }
+          } else {
+            for (let i = 0; i < length; i++) {
+              value[MessagePack.decode(undefined, true)] = MessagePack.decode(undefined, true);
+            }
           }
           return value;
         case 196: // bin8
