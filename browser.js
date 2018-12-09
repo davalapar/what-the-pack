@@ -61,7 +61,9 @@ class MessagePack {
     let length = 0;
     switch (typeof value) {
       case 'string':
-        if (value.length < 32) { // < 32, fixstr
+        length = Buffer.byteLength(value);
+        if (length < 32) { // < 32, fixstr
+          length = 0;
           for (let i = 0, c = 0, l = value.length; i < l; i += 1) {
             c = value.charCodeAt(i);
             if (c < 128) {
@@ -96,31 +98,27 @@ class MessagePack {
               allocator.buffer[allocator.offset += 1] = 128 | (c & 63);
             }
           }
-          break;
-        } else { // > 32, str8, str16, str32
-          length = Buffer.byteLength(value);
-          if (length < 256) { // str8
-            allocator.buffer[allocator.offset += 1] = 217;
-            allocator.buffer[allocator.offset += 1] = length;
-            allocator.buffer.write(value, allocator.offset += 1, length, 'utf8');
-            allocator.offset += length - 1;
-          } else if (length < 65536) { // str16
-            allocator.buffer[allocator.offset += 1] = 218;
-            allocator.buffer[allocator.offset += 1] = length >> 8;
-            allocator.buffer[allocator.offset += 1] = length;
-            allocator.buffer.write(value, allocator.offset += 1, length, 'utf8');
-            allocator.offset += length - 1;
-          } else if (length < 4294967296) { // str32
-            allocator.buffer[allocator.offset += 1] = 219;
-            allocator.buffer[allocator.offset += 1] = length >> 24;
-            allocator.buffer[allocator.offset += 1] = length >> 16;
-            allocator.buffer[allocator.offset += 1] = length >> 8;
-            allocator.buffer[allocator.offset += 1] = length;
-            allocator.buffer.write(value, allocator.offset += 1, length, 'utf8');
-            allocator.offset += length - 1;
-          } else {
-            throw Error('Max supported string length (4294967296) exceeded, encoding failure.');
-          }
+        } else if (length < 256) { // str8
+          allocator.buffer[allocator.offset += 1] = 217;
+          allocator.buffer[allocator.offset += 1] = length;
+          allocator.buffer.write(value, allocator.offset += 1, length, 'utf8');
+          allocator.offset += length - 1;
+        } else if (length < 65536) { // str16
+          allocator.buffer[allocator.offset += 1] = 218;
+          allocator.buffer[allocator.offset += 1] = length >> 8;
+          allocator.buffer[allocator.offset += 1] = length;
+          allocator.buffer.write(value, allocator.offset += 1, length, 'utf8');
+          allocator.offset += length - 1;
+        } else if (length < 4294967296) { // str32
+          allocator.buffer[allocator.offset += 1] = 219;
+          allocator.buffer[allocator.offset += 1] = length >> 24;
+          allocator.buffer[allocator.offset += 1] = length >> 16;
+          allocator.buffer[allocator.offset += 1] = length >> 8;
+          allocator.buffer[allocator.offset += 1] = length;
+          allocator.buffer.write(value, allocator.offset += 1, length, 'utf8');
+          allocator.offset += length - 1;
+        } else {
+          throw Error('Max supported string length (4294967296) exceeded, encoding failure.');
         }
         break;
       case 'number':
