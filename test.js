@@ -6,7 +6,7 @@ const { reallocate, encode, decode } = require('./index');
 reallocate(2 ** 30);
 
 test('fixstr', () => {
-  [ '', 'hello' ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+  [ '', 'hello', 'WALL·E – Typeset in the Future'].forEach((value) =>  expect(decode(encode(value))).toBe(value));
 });
 it('str 8', () => {
   [ 'α', '亜', '\uD83D\uDC26', 'a'.repeat(32), 'a'.repeat(255) ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
@@ -204,14 +204,6 @@ it('medium object', () => {
     }
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-
-const map = (length) => {
-  const result = {};
-  for (let i = 0; i < length; i++) {
-    result[i + ''] = i;
-  }
-  return result;
-}
 
 const large = {
   unsigned: [1, 2, 3, 4, { b: { c: [128, 256, 65536, 4294967296] } }],

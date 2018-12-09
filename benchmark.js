@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const Benchmark = require('benchmark');
 const suite = new Benchmark.Suite;
 
@@ -34,13 +36,6 @@ const array = (length) => {
     arr[i] = i;
   }
   return arr;
-}
-const map = (length) => {
-  const result = {};
-  for (let i = 0; i < length; i++) {
-    result[i + ''] = i;
-  }
-  return result;
 }
 
 const medium = {
