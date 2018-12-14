@@ -153,7 +153,7 @@ console.log({ encoded, decoded, dictionary: MessagePack.dictionary });
 
 ## minified build for browsers
 
-```
+```js
 <!-- latest umd build -->
 <script src="https://unpkg.com/what-the-pack/dist/MessagePack.min.js"></script>
 
@@ -172,6 +172,54 @@ console.log({ encoded, decoded, dictionary: MessagePack.dictionary });
     decoded
   });
 </script>
+```
+
+## using with browser websockets
+
+#### server
+
+```js
+const WebSocket = require('ws');
+const MessagePack = require('what-the-pack');
+
+const wss = new WebSocket.Server(
+  /* options go here */
+);
+wss.on('connection', (client, req) => {
+  console.log('A client has connected.');
+  console.log('IP address:', req.connection.remoteAddress);
+  client.send(
+    MessagePack.encode({
+      message: 'something'
+    })
+  );
+});
+```
+
+#### client
+
+- On browsers, `Buffer` object is exposed as `MessagePack.Buffer`
+- On browsers, call `MessagePack.Buffer.from(x)` on received ArrayBuffers
+
+```js
+// Create WebSocket connection.
+const socket = new WebSocket('ws://localhost:8080');
+
+// Connection opened
+socket.addEventListener('open', (event) => {
+  socket.binaryType = 'arraybuffer'; // important
+  console.log('Connected to server.');
+});
+
+// Listen for messages
+socket.addEventListener('message', (event) => {
+  const data = MessagePack.decode(
+    MessagePack.Buffer.from(event.data)
+  );
+  console.log(data);
+  // logs:
+  // { message: 'something' }
+});
 ```
 
 ## benchmarks
