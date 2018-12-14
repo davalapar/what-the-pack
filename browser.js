@@ -575,5 +575,6 @@ class MessagePack {
 }
 
 MessagePack.log = console.log;
+MessagePack.Buffer = Buffer;
 
 module.exports = MessagePack;
