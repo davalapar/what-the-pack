@@ -1,69 +1,101 @@
-const { reallocate, encode, decode } = require('./index');
+/* eslint-disable no-console */
 
-/**
- * Reallocate our temporary buffer from 8KB to 1GB:
- */
-reallocate(2 ** 30);
+const MessagePack = require('./index');
+
+const { encode, decode } = MessagePack.initialize(2 ** 30, console.log);
 
 test('fixstr', () => {
-  [ '', 'hello', 'WALL·E – Typeset in the Future'].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+  expect(decode(encode(''))).toBe('');
+  expect(decode(encode('hello'))).toBe('hello');
+  expect(decode(encode('WALL·E – Typeset in the Future'))).toBe('WALL·E – Typeset in the Future');
 });
-it('str 8', () => {
-  [ 'α', '亜', '\uD83D\uDC26', 'a'.repeat(32), 'a'.repeat(255) ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('str 8', () => {
+  expect(decode(encode('α'))).toBe('α');
+  expect(decode(encode('亜'))).toBe('亜');
+  expect(decode(encode('\uD83D\uDC26'))).toBe('\uD83D\uDC26');
+  expect(decode(encode('a'.repeat(32)))).toBe('a'.repeat(32));
+  expect(decode(encode('a'.repeat(255)))).toBe('a'.repeat(255));
 });
-it('str 16', () => {
-  [ 'a'.repeat(256), 'a'.repeat(65535) ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('str 16', () => {
+  expect(decode(encode('a'.repeat(256)))).toBe('a'.repeat(256));
+  expect(decode(encode('a'.repeat(65535)))).toBe('a'.repeat(65535));
 });
-it('str 32', () => {
-  [ 'a'.repeat(65536) ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('str 32', () => {
+  expect(decode(encode('a'.repeat(65536)))).toBe('a'.repeat(65536));
 });
 
 test('zero', () => {
-  [ 0 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+  expect(decode(encode(0))).toBe(0);
 });
 test('positive fixint', () => {
-  [ 0x00, 0x44, 0x7f ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+  expect(decode(encode(0x00))).toBe(0x00);
+  expect(decode(encode(0x44))).toBe(0x44);
+  expect(decode(encode(0x7f))).toBe(0x7f);
 });
 test('negative  fixint', () => {
-  [ -0x01, -0x10, -0x20 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+  expect(decode(encode(-0x01))).toBe(-0x01);
+  expect(decode(encode(-0x10))).toBe(-0x10);
+  expect(decode(encode(-0x20))).toBe(-0x20);
 });
 
-it('uint 8', () => {
-  [ 128, 255 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('uint 8', () => {
+  expect(decode(encode(128))).toBe(128);
+  expect(decode(encode(255))).toBe(255);
 });
-it('uint 16', () => {
-  [ 256, 65535 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('uint 16', () => {
+  expect(decode(encode(256))).toBe(256);
+  expect(decode(encode(65535))).toBe(65535);
 });
-it('uint 32', () => {
-  [ 65536, 4294967295 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('uint 32', () => {
+  expect(decode(encode(65536))).toBe(65536);
+  expect(decode(encode(4294967295))).toBe(4294967295);
 });
-it('uint 64', () => {
-  [ 4294967296, Math.pow(2, 53) - 1, Math.pow(2, 63) + 1024 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('uint 64', () => {
+  expect(decode(encode(4294967296))).toBe(4294967296);
+  expect(decode(encode(Math.pow(2, 53) - 1))).toBe(Math.pow(2, 53) - 1);
+  expect(decode(encode(Math.pow(2, 63) + 1024))).toBe(Math.pow(2, 63) + 1024);
 });
-it('int 8', () => {
-  [ -128, -255 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('int 8', () => {
+  expect(decode(encode(-128))).toBe(-128);
+  expect(decode(encode(-255))).toBe(-255);
 });
-it('int 16', () => {
-  [ 256, -65535 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('int 16', () => {
+  expect(decode(encode(256))).toBe(256);
+  expect(decode(encode(-65535))).toBe(-65535);
 });
-it('int 32', () => {
-  [ -65536, -4294967295 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('int 32', () => {
+  expect(decode(encode(-65536))).toBe(-65536);
+  expect(decode(encode(-4294967295))).toBe(-4294967295);
 });
-it('int 64', () => {
-  [ -4294967296, - (Math.pow(2, 53) - 1), -(Math.pow(2, 63) - 1024) ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('int 64', () => {
+  expect(decode(encode(-4294967296))).toBe(-4294967296);
+  expect(decode(encode(-(Math.pow(2, 53) - 1)))).toBe(-(Math.pow(2, 53) - 1));
+  expect(decode(encode(-(Math.pow(2, 63) - 1024)))).toBe(-(Math.pow(2, 63) - 1024));
 });
-it('float 32', () => {
-  [ 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('float 32', () => {
+  expect(decode(encode(0.5))).toBe(0.5);
+  expect(decode(encode(0.25))).toBe(0.25);
+  expect(decode(encode(0.125))).toBe(0.125);
+  expect(decode(encode(0.0625))).toBe(0.0625);
+  expect(decode(encode(0.03125))).toBe(0.03125);
+  expect(decode(encode(0.015625))).toBe(0.015625);
 });
-it('float 64', () => {
-  [ 1.1, 1.000001, 1.1234567890 ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('float 64', () => {
+  expect(decode(encode(1.1))).toBe(1.1);
+  expect(decode(encode(1.000001))).toBe(1.000001);
+  expect(decode(encode(1.1234567890))).toBe(1.1234567890);
 });
 
-it('true, false, undefined, NaN, +Infinity, -Infinity', () => {
-  [ true, false, undefined, NaN, +Infinity, -Infinity ].forEach((value) =>  expect(decode(encode(value))).toBe(value));
+test('true, false, undefined, NaN, +Infinity, -Infinity', () => {
+  expect(decode(encode(true))).toBe(true);
+  expect(decode(encode(false))).toBe(false);
+  expect(decode(encode(undefined))).toBe(undefined);
+  expect(decode(encode(NaN))).toBe(NaN);
+  expect(decode(encode(+Infinity))).toBe(+Infinity);
+  expect(decode(encode(-Infinity))).toBe(-Infinity);
 });
 
-it('flat & nested empty arrays', () => {
+test('flat & nested empty arrays', () => {
   [
     [],
     [
@@ -79,7 +111,7 @@ it('flat & nested empty arrays', () => {
     ]
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-it('flat arrays', () => {
+test('flat arrays', () => {
   [
     [1, 2, 3],
     [1, 2, 3, 'a', 'b', 'c'],
@@ -89,7 +121,7 @@ it('flat arrays', () => {
     ['a'.repeat(31), 'b'.repeat(255), 'c'.repeat(10000), 'd'.repeat(70000), 'e'.repeat(2**27)] // strings
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-it('nested arrays', () => {
+test('nested arrays', () => {
   [
     [
       [1, 2, 3],
@@ -102,7 +134,7 @@ it('nested arrays', () => {
     ]
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-it('highly nested arrays', () => {
+test('highly nested arrays', () => {
   [
     [
       [1, 2, 3],
@@ -121,30 +153,30 @@ it('highly nested arrays', () => {
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
 
-it('buffers, bin8', () => {
+test('buffers, bin8', () => {
   [
     Buffer.allocUnsafe(1),
     Buffer.allocUnsafe(0x100 - 1)
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-it('buffers, bin16', () => {
+test('buffers, bin16', () => {
   [
     Buffer.allocUnsafe(0x10000 - 1)
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-it('buffers, bin32', () => {
+test('buffers, bin32', () => {
   [
     Buffer.allocUnsafe(0x10000 * 10)
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-it('arraybuffers as buffer', () => {
+test('arraybuffers as buffer', () => {
   [
     new ArrayBuffer(1),
     new ArrayBuffer(0x100),
     new ArrayBuffer(0x10000),
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(Buffer.from(value)));
 });
-it('typedarrays as buffer', () => {
+test('typedarrays as buffer', () => {
   [
     new Uint8Array(0x100),
     new Uint16Array(0x100),
@@ -156,7 +188,7 @@ it('typedarrays as buffer', () => {
     new Float64Array(0x100)
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(Buffer.from(value.buffer)));
 });
-it('tiny object', () => {
+test('tiny object', () => {
   [
     {
       foo: 1,
@@ -164,7 +196,7 @@ it('tiny object', () => {
     }
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));
 });
-it('small object', () => {
+test('small object', () => {
   [
     {
       foo: 1,
@@ -190,7 +222,7 @@ const array = (length) => {
   return arr;
 }
 
-it('medium object', () => {
+test('medium object', () => {
   [
     {
       unsigned: [1, 2, 3, 4, { b: { c: [128, 256, 65536, 4294967296] } }],
@@ -222,7 +254,7 @@ for (var i = 0; i < 1024; i++) {
   large.map['b'.repeat(i)] = Buffer.from('b'.repeat(i));
 }
 
-it('large object', () => {
+test('large object', () => {
   [
     large
   ].forEach((value) =>  expect(decode(encode(value))).toStrictEqual(value));

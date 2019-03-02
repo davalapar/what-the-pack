@@ -1,64 +1,49 @@
 # what-the-pack
-The fastest MessagePack implementation in JS.
+Ultra-fast MessagePack for NodeJS & Browsers.
 
 ## implementation notes
 
-* this implementation uses pre-allocated buffers and buffer.copy() for encoding, instead of regular arrays
-* uses a buffer polyfill if used in browser environments
+- this implementation uses pre-allocated buffers and buffer.copy() for encoding, instead of regular arrays
+- uses a buffer polyfill if used in browser environments
+- has dictionary support, to further reduce payload size
 
-## backward compatibility issues with other libraries
+## backward compatibility notes with other libraries
 
-* used extensions
-  * `fixext 1, type 0, data 0` = `undefined`
-  * `fixext 1, type 0, data 1` = `NaN`
-  * `fixext 1, type 0, data 2` = `+Infinity`
-  * `fixext 1, type 0, data 3` = `-Infinity`
-* Buffers, ArrayBuffers and TypedArrays
-  * Buffers : encoded as Buffers, decoded as Buffers
-  * ArrayBuffers : encoded as Buffers, decoded as Buffers
+- used extensions
+  - `fixext 1, type 0, data 0` = `undefined`
+  - `fixext 1, type 0, data 1` = `NaN`
+  - `fixext 1, type 0, data 2` = `+Infinity`
+  - `fixext 1, type 0, data 3` = `-Infinity`
+- `Buffers`, `ArrayBuffers` and `TypedArrays`
+  - `Buffers` : encoded as Buffers, decoded as Buffers
+  - `ArrayBuffers` : encoded as Buffers, decoded as Buffers
   ```js
-  const decoded = MessagePack.decode(encoded);
+  const decoded = decode(encoded);
   const your_arraybuffer = decoded.buffer;
   ```
-  * TypedArrays : encoded as Buffers, decoded as Buffers
+  - `TypedArrays` : encoded as Buffers, decoded as Buffers
   ```js
-  const decoded = MessagePack.decode(encoded);
+  const decoded = decode(encoded);
   const your_typedarray = new Uint8Array(decoded.buffer);
   ```
 
-## future improvements
-
-* preallocating a larger buffer and using it like a circular buffer and using buffer.slice() instead of buffer.copy()
-
-## references
-
-* `buffer re-alloc idea`
-  * https://github.com/darrachequesne/notepack/issues/12#issuecomment-320872590 (Manuel Astudillo)
-* `notepack.io`
-  * https://github.com/darrachequesne/notepack (MIT, Damien Arrachequesne)
-* `notepack`
-  * https://github.com/hypergeometric/notepack (MIT, Ben Shepheard)
-* `buffer`:
-  * https://github.com/feross/buffer (MIT, Feross Aboukhadijeh)
-* `pretty-bytes`
-  * https://github.com/sindresorhus/pretty-bytes (MIT, Sindre Sorhus)
-
 ## usage
 
-```
+```sh
 yarn add what-the-pack
 ```
 
 ```js
 const MessagePack = require('what-the-pack');
+const { encode, decode } = MessagePack.initialize(2**22); // 4MB
 
 const data = {
   name: 'Lunox',
   age: 20
 };
 
-const encoded = MessagePack.encode(data);
-const decoded = MessagePack.decode(encoded);
+const encoded = encode(data);
+const decoded = decode(encoded);
 
 console.log({
   encoded,
@@ -77,20 +62,10 @@ console.log({
 
 ```js
 const MessagePack = require('what-the-pack');
-
-// sets our log function to console.info
-MessagePack.log = console.info;
-// by default, our log function is console.log
-
-// reallocates our buffer to 2 ^ 30 / 1 GB
-// logs "MessagePack: Setting buffer limit to 1.07 GB"
-MessagePack.reallocate(2**30);
-// by default, our value is 8192 or 8KB
-
+const { encode, decode } = MessagePack.initialize(2**30); // 1GB
 const data = {
   // large data goes here
 };
-
 ```
 
 ```
@@ -122,32 +97,33 @@ const data = {
 
 ## using dictionaries (added in 1.1.3)
 
-* this feature isn't in MessagePack spec but added as a convenience feature in 1.1.3
-* dictionaries allow us to decrease our buffer output size by recognizing strings used as object keys and replacing them with shorter-byte integer values during the encoding process
-* these shorter-byte placeholder values are then restored to their respective strings during the decoding process
-* the trade-off in using dictionaries is an insignificantly slower encoding and decoding time in exchange of a significantly smaller buffer output, which results into a lower network bandwidth and storage consumption in the long run
-* the best part: the byte placeholders starts from -32 then increments upwards, values -32 to 127 are encoded in single byte, which means your first (32 + 128) = 160 keys will be encoded as a single byte instead of encoding the whole string
+- this feature isn't in MessagePack spec but added as a convenience feature in 1.1.3
+- dictionaries allow us to decrease our buffer output size by recognizing strings used as object keys and replacing them with shorter-byte integer values during the encoding process
+- these shorter-byte placeholder values are then restored to their respective strings during the decoding process
+- the trade-off in using dictionaries is an insignificantly slower encoding and decoding time in exchange of a significantly smaller buffer output, which results into a lower network bandwidth and storage consumption in the long run
+- the best part: the byte placeholders starts from -32 then increments upwards, values -32 to 127 are encoded in single byte, which means your first (32 + 128) = 160 keys will be encoded as a single byte instead of encoding the whole string
 
 ```js
+const MessagePack = require('what-the-pack');
+const { encode, decode, register } = MessagePack.initialize(2**22); // 4MB
 let encoded, decoded, data;
 data = { name: 'Lunox', age: 20 };
 
-encoded = MessagePack.encode(data);
-decoded = MessagePack.decode(encoded);
+encoded = encode(data);
+decoded = decode(encoded);
 console.log({ encoded, decoded });
 /**
- * encoded: <Buffer 82 a4 6e 61 6d 65 a5 4c 75 6e 6f 78 a3 61 67 65 14> (17)
- * decoded: { name: 'Lunox', age: 20 }
+ - encoded: <Buffer 82 a4 6e 61 6d 65 a5 4c 75 6e 6f 78 a3 61 67 65 14> (17)
+ - decoded: { name: 'Lunox', age: 20 }
  **/
 
-MessagePack.register('name', 'age');
-encoded = MessagePack.encode(data);
-decoded = MessagePack.decode(encoded);
-console.log({ encoded, decoded, dictionary: MessagePack.dictionary });
+register('name', 'age');
+encoded = encode(data);
+decoded = decode(encoded);
+console.log({ encoded, decoded });
 /**
- * encoded: <Buffer 82 e0 a5 4c 75 6e 6f 78 e1 14> (10)
- * decoded: { name: 'Lunox', age: 20 }
- * dictionary: { '-32': 'name', name: -32, '-31': 'age', age: -31 }
+ - encoded: <Buffer 82 e0 a5 4c 75 6e 6f 78 e1 14> (10)
+ - decoded: { name: 'Lunox', age: 20 }
  **/
 ```
 
@@ -159,18 +135,14 @@ console.log({ encoded, decoded, dictionary: MessagePack.dictionary });
 
 <!-- exposed as 'MessagePack' -->
 <script>
+  const { encode, decode } = MessagePack.initialize(2**22); // 4MB
   const data = {
     name: 'Lunox',
     age: 20
   };
-
-  const encoded = MessagePack.encode(data);
-  const decoded = MessagePack.decode(encoded);
-
-  console.log({
-    encoded,
-    decoded
-  });
+  const encoded = encode(data);
+  const decoded = decode(encoded);
+  console.log({ encoded, decoded });
 </script>
 ```
 
@@ -181,15 +153,16 @@ console.log({ encoded, decoded, dictionary: MessagePack.dictionary });
 ```js
 const WebSocket = require('ws');
 const MessagePack = require('what-the-pack');
+const { encode, decode } = MessagePack.initialize(2**22); // 4MB
 
 const wss = new WebSocket.Server(
-  /* options go here */
+  /- options go here */
 );
 wss.on('connection', (client, req) => {
   console.log('A client has connected.');
   console.log('IP address:', req.connection.remoteAddress);
   client.send(
-    MessagePack.encode({
+    encode({
       message: 'something'
     })
   );
@@ -204,6 +177,7 @@ wss.on('connection', (client, req) => {
 ```js
 // Create WebSocket connection.
 const socket = new WebSocket('ws://localhost:8080');
+const { encode, decode, Buffer } = MessagePack.initialize(2**22); // 4MB
 
 // Connection opened
 socket.addEventListener('open', (event) => {
@@ -214,53 +188,55 @@ socket.addEventListener('open', (event) => {
 // Listen for messages
 socket.addEventListener('message', (event) => {
   const data = MessagePack.decode(
-    MessagePack.Buffer.from(event.data)
+    Buffer.from(event.data)
   );
   console.log(data);
-  // logs:
-  // { message: 'something' }
+  // logs: { message: 'something' }
 });
 ```
 
 ## benchmarks
 
-```
+```sh
 yarn run benchmark
 ```
 
-```
+```sh
 $ yarn run benchmark
-yarn run v1.5.1
-$ node benchmark.js
-MessagePack: Setting buffer limit to 4.19 MB
-notepack.encode tiny x 237,430 ops/sec ±44.27% (85 runs sampled)
-notepack encode small x 235,976 ops/sec ±1.13% (90 runs sampled)
-notepack encode medium x 116,554 ops/sec ±0.58% (92 runs sampled)
-notepack encode large x 228 ops/sec ±1.46% (81 runs sampled)
-notepack decode tiny x 1,049,417 ops/sec ±0.79% (92 runs sampled)
-notepack decode small x 239,018 ops/sec ±0.21% (94 runs sampled)
-notepack decode medium x 143,825 ops/sec ±0.23% (90 runs sampled)
-notepack decode large x 215 ops/sec ±0.51% (82 runs sampled)
-what-the-pack encode tiny x 1,795,238 ops/sec ±0.40% (91 runs sampled)
-what-the-pack encode small x 488,628 ops/sec ±0.41% (92 runs sampled)
-what-the-pack encode medium x 217,942 ops/sec ±0.43% (94 runs sampled)
-what-the-pack encode large x 221 ops/sec ±1.15% (82 runs sampled)
-what-the-pack decode tiny x 1,037,703 ops/sec ±1.11% (85 runs sampled)
-what-the-pack decode small x 243,569 ops/sec ±1.03% (92 runs sampled)
-what-the-pack decode medium x 144,167 ops/sec ±1.02% (88 runs sampled)
-what-the-pack decode large x 215 ops/sec ±0.30% (82 runs sampled)
-Done in 96.26s.
+JSON stringify tiny x 1,477,866 ops/sec ±0.58% (93 runs sampled)
+JSON stringify small x 232,645 ops/sec ±0.25% (91 runs sampled)
+JSON stringify medium x 117,357 ops/sec ±0.31% (93 runs sampled)
+JSON stringify large x 24.01 ops/sec ±0.37% (43 runs sampled)
+JSON parse tiny x 1,301,925 ops/sec ±3.18% (82 runs sampled)
+JSON parse small x 264,410 ops/sec ±0.57% (90 runs sampled)
+JSON parse medium x 133,865 ops/sec ±0.52% (87 runs sampled)
+JSON parse large x 31.52 ops/sec ±0.34% (53 runs sampled)
+what-the-pack encode tiny x 1,175,981 ops/sec ±0.39% (92 runs sampled)
+what-the-pack encode small x 365,533 ops/sec ±0.85% (90 runs sampled)
+what-the-pack encode medium x 173,746 ops/sec ±0.41% (91 runs sampled)
+what-the-pack encode large x 218 ops/sec ±0.85% (82 runs sampled)
+what-the-pack decode tiny x 1,130,260 ops/sec ±0.30% (91 runs sampled)
+what-the-pack decode small x 254,931 ops/sec ±0.79% (94 runs sampled)
+what-the-pack decode medium x 146,809 ops/sec ±0.79% (92 runs sampled)
+what-the-pack decode large x 211 ops/sec ±0.37% (87 runs sampled)
+notepack.encode tiny x 1,291,361 ops/sec ±0.22% (95 runs sampled)
+notepack encode small x 325,882 ops/sec ±1.20% (95 runs sampled)
+notepack encode medium x 133,398 ops/sec ±0.20% (94 runs sampled)
+notepack encode large x 231 ops/sec ±1.65% (81 runs sampled)
+notepack decode tiny x 1,097,597 ops/sec ±0.67% (93 runs sampled)
+notepack decode small x 231,895 ops/sec ±0.69% (96 runs sampled)
+notepack decode medium x 137,385 ops/sec ±2.45% (86 runs sampled)
+notepack decode large x 210 ops/sec ±0.85% (86 runs sampled)
 ```
+
 ## tests
 
-```
+```sh
 yarn run test
 ```
 
-```
+```sh
 $ yarn run test
-yarn run v1.5.1
-$ jest
  PASS  ./test.js
   √ fixstr (6ms)
   √ str 8 (2ms)
@@ -304,5 +280,32 @@ Time:        5.477s
 Ran all test suites.
 Done in 6.59s.
 ```
+
+## changelog
+
+- 1.x
+  - basic support
+  - dictionary support
+- 2.x
+  - rewrite to use raw functions instead of classes
+  - update dev-deps
+  - jest test-cov @ `86.06%`
+    - statements `389/452`
+    - branches `137/169`
+    - functions `11/12`
+    - lines `374/428`
+
+## references
+
+- `buffer re-alloc idea`
+  - https://github.com/darrachequesne/notepack/issues/12#issuecomment-320872590 (Manuel Astudillo)
+- `notepack.io`
+  - https://github.com/darrachequesne/notepack (MIT, Damien Arrachequesne)
+- `notepack`
+  - https://github.com/hypergeometric/notepack (MIT, Ben Shepheard)
+- `buffer`:
+  - https://github.com/feross/buffer (MIT, Feross Aboukhadijeh)
+- `pretty-bytes`
+  - https://github.com/sindresorhus/pretty-bytes (MIT, Sindre Sorhus)
 
 MIT | @davalapar

@@ -8,7 +8,8 @@ export default {
     file: 'dist/MessagePack.min.js',
     format: 'umd',
     name: 'MessagePack',
-    sourcemap: true
+    sourcemap: true,
+    exports: 'named'
   },
   plugins: [node({ preferBuiltins: false }), commonjs(), terser()]
 }

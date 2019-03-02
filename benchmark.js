@@ -3,14 +3,12 @@
 const Benchmark = require('benchmark');
 const suite = new Benchmark.Suite;
 
-const wtp = require('./index');
+const MessagePack = require('./index');
 
 const notepack = require('notepack.io');
 
-/**
- * Reallocate our temporary buffer from 8KB to 4MB:
- */
-wtp.reallocate(2 ** 22);
+const wtp = MessagePack.initialize(2 ** 24);
+
 
 const tiny = {
   foo: 1,
@@ -78,10 +76,40 @@ const encoded = {
     small: notepack.encode(small),
     medium: notepack.encode(medium),
     large: notepack.encode(large)
+  },
+  json: {
+    tiny: JSON.stringify(tiny),
+    small: JSON.stringify(small),
+    medium: JSON.stringify(medium),
+    large: JSON.stringify(large)
   }
 };
 
 suite
+  .add('JSON stringify tiny', () => {
+    JSON.stringify(tiny);
+  })
+  .add('JSON stringify small', () => {
+    JSON.stringify(small);
+  })
+  .add('JSON stringify medium', () => {
+    JSON.stringify(medium);
+  })
+  .add('JSON stringify large', () => {
+    JSON.stringify(large);
+  })
+  .add('JSON parse tiny', () => {
+    JSON.parse(encoded.json.tiny);
+  })
+  .add('JSON parse small', () => {
+    JSON.parse(encoded.json.small);
+  })
+  .add('JSON parse medium', () => {
+    JSON.parse(encoded.json.medium);
+  })
+  .add('JSON parse large', () => {
+    JSON.parse(encoded.json.large);
+  })
   .add('what-the-pack encode tiny', () => {
     wtp.encode(tiny);
   })
