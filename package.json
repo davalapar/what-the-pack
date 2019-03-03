@@ -1,6 +1,6 @@
 {
   "name": "what-the-pack",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Ultra-fast MessagePack for NodeJS & Browsers",
   "main": "index.js",
   "repository": "git@github.com:davalapar/what-the-pack.git",
