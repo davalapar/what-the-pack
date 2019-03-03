@@ -5,7 +5,7 @@ const pb = require('pretty-bytes');
 const Buffer = require('buffer').Buffer;
 
 const initialize = (tempBufferLength, logFunction) => {
-  if (Number.isNaN(tempBufferLength) === true) {
+  if (typeof tempBufferLength !== 'number' || Number.isNaN(tempBufferLength) === true) {
     throw Error('@initialize : expecting "tempBufferLength" to be a number.');
   }
   if (tempBufferLength < 1) {

@@ -286,7 +286,7 @@ Done in 6.59s.
 - 1.x
   - basic support
   - dictionary support
-- 2.x
+- 2.0.0
   - rewrite to use raw functions instead of classes
   - update dev-deps
   - jest test-cov @ `86.06%`
@@ -294,6 +294,9 @@ Done in 6.59s.
     - branches `137/169`
     - functions `11/12`
     - lines `374/428`
+- 2.0.x
+  - fix tempBufferLength check
+  - rebuild for browser
 
 ## references
 
