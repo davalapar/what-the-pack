@@ -553,7 +553,9 @@ const initialize = (tempBufferLength, logFunction) => {
   const decode = (buffer) => {
     tempDecodeBuffer = buffer;
     tempDecodeBufferOffset = 0;
-    return internalDecode();
+    const result = internalDecode();
+    tempDecodeBuffer = undefined;
+    return result;
   };
   return { encode, decode, register };
 };

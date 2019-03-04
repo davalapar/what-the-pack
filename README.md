@@ -297,6 +297,7 @@ Done in 6.59s.
 - 2.0.x
   - fix tempBufferLength check
   - rebuild for browser
+  - fix leak on buffer decode
 
 ## references
 
